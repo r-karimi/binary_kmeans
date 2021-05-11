@@ -6,6 +6,12 @@
   # vec: A vector of fluorescence intensity values.
   # mean: A mean intensity value.
   # std: A standard deviation.
+# Returns:
+  # A logical vector of length(vec).
+# Description:
+  # The thresholding function is a short function to return a logical vector
+  # defining the signal-containing region and the noise-containing region
+  # of the time-intensity trace.
 
 thresholding = function(vec, mean, std){
   return(abs(vec - mean) >=  5*std)
