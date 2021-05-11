@@ -55,3 +55,6 @@ pre_process = function(data){
   scaled_data = data %>% transmute(time = time, intensity = intensity*scale)
   list(data = scaled_data, scale = scale) %>% return()
 }
+
+# Test push
+print(1)
