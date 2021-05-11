@@ -31,9 +31,7 @@ find_window = function(data){
 pre_process = function(data){
   scale = max(data$time)/max(data$intensity)
   scaled_data = data %>% transmute(time = time, intensity = intensity*scale)
-  
   list(data = scaled_data, scale = scale) %>% return()
-  
 }
 
 
