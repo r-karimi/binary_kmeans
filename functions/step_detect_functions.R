@@ -50,22 +50,22 @@ shapiro_helper = function(df){
 # write a new function, ad_helper, to test
 # sampling of the Poisson distribution
 
-library("ADGofTest")
-
-ad_helper = function(df){
-  if(sum(which(df$intensity < 0)) != 0){
-    return(1)
-  }
-  if(nrow(df) >= 3 && nrow(df) < 5000){
-    return(ad.test(df$intensity, ppois, lambda = median(df$intensity))$p.value %>% as.numeric())
-  } 
-  if (nrow(df) >= 5000){
-    return(0)
-  } 
-  else {
-    return(1)
-  }
-}
+# library("ADGofTest")
+# 
+# ad_helper = function(df){
+#   if(sum(which(df$intensity < 0)) != 0){
+#     return(1)
+#   }
+#   if(nrow(df) >= 3 && nrow(df) < 5000){
+#     return(ad.test(df$intensity, ppois, lambda = median(df$intensity))$p.value %>% as.numeric())
+#   } 
+#   if (nrow(df) >= 5000){
+#     return(0)
+#   } 
+#   else {
+#     return(1)
+#   }
+# }
 
 pre_clust = function(processed){
   processed %>% 
@@ -147,52 +147,52 @@ re_clust = function(clusters){
   
 }
 
-re_clust_ad = function(clusters){
-  
-  # only work with the recluster rows,
-  # recombine all rows later. the goal
-  # is to return to the 'clusters'
-  # data structure.
-  
-  no_recluster = clusters %>% 
-    filter(!reclust)
-  
-  recluster_set = clusters %>% 
-    filter(reclust) %>% 
-    select(data, .cluster) %>%
-    unnest(cols = c(data)) %>%
-    group_by(.cluster) %>%
-    group_split() 
-  
-  # now we are working with a list structure, so we need to use map functions onto the list.
-  
-  # perform k-means on each element of the above list
-  
-  reclust_data = recluster_set %>%
-    map(kmeans_helper)
-  
-  # add the cluster vector onto each data frame in the above list, and bump up the index
-  
-  recluster_set = cluster_paste(recluster_set, reclust_data)
-  
-  # unlist and re-nest the data for shapiro tests
-  
-  reclustered = recluster_set %>% 
-    bind_rows() %>%
-    group_by(.cluster) %>%
-    nest() %>%
-    mutate(shap = map(data, ad_helper)) %>%
-    mutate(reclust = ifelse(shap <= 0.05, T, F)) 
-  
-  # bump the indices of the clusters that didn't need to be reclustered
-  
-  no_recluster$.cluster = no_recluster$.cluster + max(reclustered$.cluster)
-  
-  # bind the rows that didn't need reclustering initially and return
-  
-  bind_rows(reclustered, no_recluster) %>% return()
-  
-}
+# re_clust_ad = function(clusters){
+#   
+#   # only work with the recluster rows,
+#   # recombine all rows later. the goal
+#   # is to return to the 'clusters'
+#   # data structure.
+#   
+#   no_recluster = clusters %>% 
+#     filter(!reclust)
+#   
+#   recluster_set = clusters %>% 
+#     filter(reclust) %>% 
+#     select(data, .cluster) %>%
+#     unnest(cols = c(data)) %>%
+#     group_by(.cluster) %>%
+#     group_split() 
+#   
+#   # now we are working with a list structure, so we need to use map functions onto the list.
+#   
+#   # perform k-means on each element of the above list
+#   
+#   reclust_data = recluster_set %>%
+#     map(kmeans_helper)
+#   
+#   # add the cluster vector onto each data frame in the above list, and bump up the index
+#   
+#   recluster_set = cluster_paste(recluster_set, reclust_data)
+#   
+#   # unlist and re-nest the data for shapiro tests
+#   
+#   reclustered = recluster_set %>% 
+#     bind_rows() %>%
+#     group_by(.cluster) %>%
+#     nest() %>%
+#     mutate(shap = map(data, ad_helper)) %>%
+#     mutate(reclust = ifelse(shap <= 0.05, T, F)) 
+#   
+#   # bump the indices of the clusters that didn't need to be reclustered
+#   
+#   no_recluster$.cluster = no_recluster$.cluster + max(reclustered$.cluster)
+#   
+#   # bind the rows that didn't need reclustering initially and return
+#   
+#   bind_rows(reclustered, no_recluster) %>% return()
+#   
+# }
 
 min_time_helper = function(df){
   return(min(df[,1]))
@@ -438,45 +438,45 @@ pipe_old = function(data, compression){
   
 }
 
-pipe_ad = function(data, compression){
-  
-  # structure and name the data
-  
-  data = as_tibble(data[,1:2])
-  colnames(data) = c("time", "intensity")
-  
-  # preprocess the data
-  
-  processed = data %>% find_window() %>% pre_process()
-  
-  scale_factor = processed$scale
-  
-  clusters = processed$data %>%
-    pre_clust()
-  
-  # perform binary segmentation either 5 times (way more steps than we'd ever get) or until all clusters are normally distribtued
-  
-  it_count = 0
-  while((it_count <= 10) && (clusters$reclust %>% sum() != 0)){
-    clusters = clusters %>% re_clust_ad()
-    it_count = it_count + 1
-  }
-  
-  clusters = clusters %>%
-    mutate(med = map(data, median_helper)) %>%
-    cluster_sort() %>%
-    breakpoints() %>%
-    cluster_sort() %>%
-    cluster_compress(compression) %>%
-    cluster_sort() %>%
-    unnest(cols = c(data)) %>%
-    mutate(intensity = intensity/scale_factor) %>%
-    group_by(.cluster) %>%
-    nest()
-  
-  return(clusters)
-  
-}
+# pipe_ad = function(data, compression){
+#   
+#   # structure and name the data
+#   
+#   data = as_tibble(data[,1:2])
+#   colnames(data) = c("time", "intensity")
+#   
+#   # preprocess the data
+#   
+#   processed = data %>% find_window() %>% pre_process()
+#   
+#   scale_factor = processed$scale
+#   
+#   clusters = processed$data %>%
+#     pre_clust()
+#   
+#   # perform binary segmentation either 5 times (way more steps than we'd ever get) or until all clusters are normally distribtued
+#   
+#   it_count = 0
+#   while((it_count <= 10) && (clusters$reclust %>% sum() != 0)){
+#     clusters = clusters %>% re_clust_ad()
+#     it_count = it_count + 1
+#   }
+#   
+#   clusters = clusters %>%
+#     mutate(med = map(data, median_helper)) %>%
+#     cluster_sort() %>%
+#     breakpoints() %>%
+#     cluster_sort() %>%
+#     cluster_compress(compression) %>%
+#     cluster_sort() %>%
+#     unnest(cols = c(data)) %>%
+#     mutate(intensity = intensity/scale_factor) %>%
+#     group_by(.cluster) %>%
+#     nest()
+#   
+#   return(clusters)
+#   
+# }
 
 cluster_plot = function(clusters, name){
   plotR = clusters %>% unnest(cols = c(data))
