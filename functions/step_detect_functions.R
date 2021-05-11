@@ -234,13 +234,6 @@ merge_helper = function(df1, df2, cluster_number){
   a = bind_rows(df1, df2) %>% 
     nest(data = everything())
   
-  # version that returns SD
-  #b = cbind(.cluster = cluster_number, med = median(a[[1]][[1]]$intensity), shap = 1, reclust = F, min_time = min_time, sd = sd(a[[1]][[1]]$intensity), data = a) 
-  
-  #b$sd = list(b$sd)
-  
-  # version that doesn't return SD
-  
   b = cbind(.cluster = cluster_number, med = median(a[[1]][[1]]$intensity), shap = 1, reclust = F, min_time = min_time, data = a) 
   
   return(b)
@@ -358,45 +351,45 @@ breakpoints = function(clusters){
   return(t)
 }
 
-pipe = function(data){
-  
-  # structure and name the data
-  
-  data = as_tibble(data[,1:2])
-  colnames(data) = c("time", "intensity")
-  
-  # preprocess the data
-  
-  processed = data %>% find_window() %>% pre_process()
-  
-  scale_factor = processed$scale
-  
-  clusters = processed$data %>%
-    pre_clust()
-  
-  # perform binary segmentation either 5 times (way more steps than we'd ever get) or until all clusters are normally distribtued
-  
-  it_count = 0
-  while((it_count <= 10) && (clusters$reclust %>% sum() != 0)){
-    clusters = clusters %>% re_clust()
-    it_count = it_count + 1
-  }
-  
-  clusters = clusters %>%
-    mutate(med = map(data, median_helper)) %>%
-    cluster_sort() %>%
-    breakpoints() %>%
-    cluster_sort() %>%
-    cluster_compress_2() %>%
-    cluster_sort() %>%
-    unnest(cols = c(data)) %>%
-    mutate(intensity = intensity/scale_factor) %>%
-    group_by(.cluster) %>%
-    nest()
-  
-  return(clusters)
-  
-}
+# pipe = function(data){
+#   
+#   # structure and name the data
+#   
+#   data = as_tibble(data[,1:2])
+#   colnames(data) = c("time", "intensity")
+#   
+#   # preprocess the data
+#   
+#   processed = data %>% find_window() %>% pre_process()
+#   
+#   scale_factor = processed$scale
+#   
+#   clusters = processed$data %>%
+#     pre_clust()
+#   
+#   # perform binary segmentation either 5 times (way more steps than we'd ever get) or until all clusters are normally distribtued
+#   
+#   it_count = 0
+#   while((it_count <= 10) && (clusters$reclust %>% sum() != 0)){
+#     clusters = clusters %>% re_clust()
+#     it_count = it_count + 1
+#   }
+#   
+#   clusters = clusters %>%
+#     mutate(med = map(data, median_helper)) %>%
+#     cluster_sort() %>%
+#     breakpoints() %>%
+#     cluster_sort() %>%
+#     cluster_compress_2() %>%
+#     cluster_sort() %>%
+#     unnest(cols = c(data)) %>%
+#     mutate(intensity = intensity/scale_factor) %>%
+#     group_by(.cluster) %>%
+#     nest()
+#   
+#   return(clusters)
+#   
+# }
 
 pipe_old = function(data, compression){
   
@@ -407,7 +400,9 @@ pipe_old = function(data, compression){
   
   # preprocess the data
   
-  processed = data %>% find_window() %>% pre_process()
+  processed = data %>% 
+    find_window() %>% 
+    pre_process()
   
   scale_factor = processed$scale
   
