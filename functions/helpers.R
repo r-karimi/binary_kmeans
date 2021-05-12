@@ -155,3 +155,62 @@ breakpoint_helper = function(df, max_cluster){
     mutate(med = map(data, median_helper), shap = map(data, shapiro_helper), reclust = F, min_time = map(data, min_time_helper)) %>% 
     return()
 }
+
+
+
+cluster_plot = function(clusters, name){
+  plotR = clusters %>% unnest(cols = c(data))
+  
+  processed_plot = ggplot(data = plotR, aes(x = time, y = intensity, colour = factor(.cluster))) +
+    geom_point(size = 0.75, alpha = 1) +
+    geom_line() +
+    labs(x = "Time (s)", y = "Intensity (a.u.)", colour = "Cluster") +
+    theme_classic()
+  
+  return(processed_plot)
+}
+
+
+
+stoSig = function(n, SN){
+  
+  randoms = runif(n, min = 0, max = 1)
+  randoms[which(randoms >= 0.95)] = 1
+  randoms[which(randoms < 0.95)] = 0
+  
+  stoSigSteps = sum(randoms)
+  
+  #construct the clean signal backwards
+  
+  signalI = c()
+  signalAmp = 0
+  for(i in 1:n){
+    
+    if(randoms[i] == 0){
+      signalI[[i]] = signalAmp
+    } 
+    
+    if(randoms[i] == 1){
+      signalAmp = signalAmp + 100
+      signalI[[i]] = signalAmp
+    }
+  }
+  signalI = rev(signalI)
+  #add buffer at end
+  signalI = c(signalI, rep(0, 0.5*n))
+  
+  #add noise
+  
+  noisySig = c()
+  for(i in 1:(1.5*n)){
+    if(signalI[i] != 0){
+      noisySig[[i]] = signalI[i] + rnorm(1, 0, SN*sqrt(signalI[i]))
+    } else {
+      noisySig[[i]] = signalI[i] + rnorm(1, 0, SN*10)
+    }
+  }
+  
+  #plot(noisySig, type = "l")
+  return(list(data = data.frame(time = c((1:(1.5*n))/10), intensity = noisySig), steps = stoSigSteps))
+  
+}

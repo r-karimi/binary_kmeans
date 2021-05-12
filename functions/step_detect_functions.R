@@ -530,89 +530,89 @@ stoSig = function(n, SN){
 
 # function for extracting the R^2 of a log fit of a dataset
 
-log_fit = function(data){
-  
-  data = as_tibble(data[,1:2])
-  colnames(data) = c("time", "intensity")
-
-  processed = data %>%
-    select(time, intensity) %>%
-    find_window()
-  
-  fit = lm(log(abs(intensity) + 1) ~ time, data = processed) %>% summary()
-  
-  return(fit$r.squared)
-  
-}
+# log_fit = function(data){
+#   
+#   data = as_tibble(data[,1:2])
+#   colnames(data) = c("time", "intensity")
+# 
+#   processed = data %>%
+#     select(time, intensity) %>%
+#     find_window()
+#   
+#   fit = lm(log(abs(intensity) + 1) ~ time, data = processed) %>% summary()
+#   
+#   return(fit$r.squared)
+#   
+# }
 
 # functions to help extract stats
 
-ladder_extract = function(data){
-  data$drops %>% median() %>% return()
-}
+# ladder_extract = function(data){
+#   data$drops %>% median() %>% return()
+# }
 
-med_ext = function(data){
-  return(data$intensity %>% median())
-}
+# med_ext = function(data){
+#   return(data$intensity %>% median())
+# }
 
-stdv_ext = function(data){
-  return(data$intensity %>% sd())
-}
+# stdv_ext = function(data){
+#   return(data$intensity %>% sd())
+# }
 
-stat_extract = function(cluster){
-  
-  new = cluster
-  
-  medians = map(new$data, med_ext) %>% unlist(recursive = F)
-  
-  lifetimes = map(new$data, nrow) %>% unlist(recursive = F)
-  lifetimes = lifetimes / 10
-  
-  stdv = map(new$data, stdv_ext) %>% unlist(recursive = F)
-  
-  drops = c()
-  for(i in 1:nrow(new)){
-    if(i != nrow(new)){
-      drops[i] = medians[i] - medians[i+1]
-    } else {
-      drops[i] = 0
-    }
-  }
-  
-  return(cbind(new, medians = medians, lifetimes = lifetimes, stdv = stdv, drops = drops))
-  
-}
+# stat_extract = function(cluster){
+#   
+#   new = cluster
+#   
+#   medians = map(new$data, med_ext) %>% unlist(recursive = F)
+#   
+#   lifetimes = map(new$data, nrow) %>% unlist(recursive = F)
+#   lifetimes = lifetimes / 10
+#   
+#   stdv = map(new$data, stdv_ext) %>% unlist(recursive = F)
+#   
+#   drops = c()
+#   for(i in 1:nrow(new)){
+#     if(i != nrow(new)){
+#       drops[i] = medians[i] - medians[i+1]
+#     } else {
+#       drops[i] = 0
+#     }
+#   }
+#   
+#   return(cbind(new, medians = medians, lifetimes = lifetimes, stdv = stdv, drops = drops))
+#   
+# }
 
-ladder_ext = function(cluster){
-  
-  ladder = cluster %>%
-    arrange(desc(drops))
-  
-  ladder = cbind(ladder, position = c(1:nrow(ladder)))
-  
-  return(ladder)
-  
-}
+# ladder_ext = function(cluster){
+#   
+#   ladder = cluster %>%
+#     arrange(desc(drops))
+#   
+#   ladder = cbind(ladder, position = c(1:nrow(ladder)))
+#   
+#   return(ladder)
+#   
+# }
 
-unlist_helper = function(list){
-  q = list %>% 
-    unlist(recursive = F) %>% 
-    as_tibble() %>% 
-    set_names(c("time", "intensity", "steps")) %>% 
-    group_by(steps) %>% nest() %>% 
-    return()
-}
+# unlist_helper = function(list){
+#   q = list %>% 
+#     unlist(recursive = F) %>% 
+#     as_tibble() %>% 
+#     set_names(c("time", "intensity", "steps")) %>% 
+#     group_by(steps) %>% nest() %>% 
+#     return()
+# }
 
-normalize_int = function(cluster){
-  max_drop = max(cluster$drops)
-  cluster = cluster %>%
-    mutate(norm_med = drops/max_drop)
-  r = lm(data = cluster, norm_med ~ log(position)) %>% summary()
-  return(r$coefficients[2, 1])
-}
+# normalize_int = function(cluster){
+#   max_drop = max(cluster$drops)
+#   cluster = cluster %>%
+#     mutate(norm_med = drops/max_drop)
+#   r = lm(data = cluster, norm_med ~ log(position)) %>% summary()
+#   return(r$coefficients[2, 1])
+# }
 
-ladder_extract = function(data){
-  data$drops[which(data$drops >= 0)] %>% median() %>% return()
-}
+# ladder_extract = function(data){
+#   data$drops[which(data$drops >= 0)] %>% median() %>% return()
+# }
 
 
