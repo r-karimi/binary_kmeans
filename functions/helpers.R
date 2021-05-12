@@ -18,9 +18,11 @@ shapiro_helper = function(df){
   if(nrow(df) >= 3 && nrow(df) < 5000){
     return(shapiro.test(df$intensity)$p.value) 
     # Apply the Shapiro-Wilk test and return the p-value.
-  } if (nrow(df) >= 5000){
+  } 
+  if (nrow(df) >= 5000) {
     return(0) # Return 0 (mark for reclustering) if n >= 5000 points.
-  } else {
+  } 
+  else {
     return(1) # Don't recluster if n < 3 points.
   }
 }
@@ -175,7 +177,10 @@ cluster_plot = function(clusters, name){
   processed_plot = ggplot(data = plotR, aes(x = time, y = intensity, colour = factor(.cluster))) +
     geom_point(size = 0.75, alpha = 1) +
     geom_line() +
-    labs(x = "Time (s)", y = "Intensity (a.u.)", colour = "Cluster") +
+    labs(x = "Time (s)", 
+         y = "Intensity (a.u.)", 
+         colour = "Cluster",
+         title = name) +
     theme_classic()
   
   # Return the plot.
@@ -225,7 +230,8 @@ simulate_trace = function(n, sig_noise_prop, step_prob = 0.05){
   for (i in 1:n) {
     if (randoms[i] == 0) {
       signalI[[i]] = signalAmp
-    } if (randoms[i] == 1) {
+    } 
+    if (randoms[i] == 1) {
       signalAmp = signalAmp + 100
       signalI[[i]] = signalAmp
     }
@@ -244,9 +250,10 @@ simulate_trace = function(n, sig_noise_prop, step_prob = 0.05){
   # by sig_noise_prop.
   noisySig = c()
   for (i in 1:(1.5*n)) {
-    if(signalI[i] != 0) {
+    if (signalI[i] != 0) {
       noisySig[[i]] = signalI[i] + rnorm(1, 0, sig_noise_prop*sqrt(signalI[i]))
-    } else {
+    } 
+    else {
       noisySig[[i]] = signalI[i] + rnorm(1, 0, sig_noise_prop*10)
     }
   }
