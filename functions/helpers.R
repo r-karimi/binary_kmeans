@@ -156,61 +156,104 @@ breakpoint_helper = function(df, max_cluster){
     return()
 }
 
-
+## cluster_plot
+# Arguments:  
+  # clusters: A list of predicted clusters from a raw time-intensity table,
+  # as generated with `pipe()`.
+  # name: The title of the resultant plot.
+# Returns:
+  # A ggplot2 graph object that can be called to display a plot.
+# Description:
+  # cluster_plot is a helper function designed to visualize clustering outcomes
+  # from the Binary K-means algorithm, as applied with the pipe() function. 
 
 cluster_plot = function(clusters, name){
+  # Pull out time, intensity, and cluster numbers from clusters object.
   plotR = clusters %>% unnest(cols = c(data))
   
+  # Construct the plot.
   processed_plot = ggplot(data = plotR, aes(x = time, y = intensity, colour = factor(.cluster))) +
     geom_point(size = 0.75, alpha = 1) +
     geom_line() +
     labs(x = "Time (s)", y = "Intensity (a.u.)", colour = "Cluster") +
     theme_classic()
   
+  # Return the plot.
   return(processed_plot)
 }
 
+## simulate_trace
+# Arguments:  
+  # n: A number, the number of time-intensity tuples contained in 
+  # the resultant simulated signal.
+  # sig_noise_prop: A decimal, the proportionality factor between the square root
+  # of the signal intensity of a given cluster. Set to 1 for Poissonian-like noise, 
+  # increase and decrease to afford simulated signals of various S/N.
+  # step_prob: A decimal, the decimal probability that a given timepoint 
+  # contains a changepoint.
+# Returns:
+  # A list containing the time-intensity tuples of simulated traces, and the number
+  # of steps in the simulated signal.
+# Description:
+  # simulate_trace is a function to assist in assessing Binary K-means at various S/N
+  # by generating simulated traces containing stochastic step events, masked by
+  # Gaussian noise. The step heights have an underlying uniform value masked
+  # by Gaussian noise.
 
-
-stoSig = function(n, SN){
-  
+simulate_trace = function(n, sig_noise_prop, step_prob = 0.05){
+  # Generate a pseudorandom vector of length n.
   randoms = runif(n, min = 0, max = 1)
-  randoms[which(randoms >= 0.95)] = 1
-  randoms[which(randoms < 0.95)] = 0
   
-  stoSigSteps = sum(randoms)
+  # Check which locations will contain steps, and
+  # demarkate them with the number 1.
+  randoms[which(randoms >= (1 - step_prob))] = 1
+  randoms[which(randoms < (1 - step_prob))] = 0
   
-  #construct the clean signal backwards
+  # Sum over the randoms vector to figure out
+  # how many steps are contained by the simulated trace.
+  n_steps = sum(randoms)
   
+  # Construct the simulated trace backward by initializing a 
+  # placeholder vector.
   signalI = c()
+  
+  # Assign a starting signal amplitude of 0.
   signalAmp = 0
-  for(i in 1:n){
-    
-    if(randoms[i] == 0){
+  
+  # Make the entire signal, adding 100 to the signal amplitude
+  # when a step location is encountered.
+  for (i in 1:n) {
+    if (randoms[i] == 0) {
       signalI[[i]] = signalAmp
-    } 
-    
-    if(randoms[i] == 1){
+    } if (randoms[i] == 1) {
       signalAmp = signalAmp + 100
       signalI[[i]] = signalAmp
     }
   }
+  
+  # Reverse the signal for a piecewise constant
+  # decreasing signal.
   signalI = rev(signalI)
-  #add buffer at end
+  
+  # Add a buffer of 0-valued signal at the end.
   signalI = c(signalI, rep(0, 0.5*n))
   
-  #add noise
-  
+  # Add Gaussian noise to signalI location-by-location. If the
+  # signal magnitude is 0, add Gaussian noise of constant s.d.,
+  # otherwise add noise proportional to the square root of the signal
+  # by sig_noise_prop.
   noisySig = c()
-  for(i in 1:(1.5*n)){
-    if(signalI[i] != 0){
-      noisySig[[i]] = signalI[i] + rnorm(1, 0, SN*sqrt(signalI[i]))
+  for (i in 1:(1.5*n)) {
+    if(signalI[i] != 0) {
+      noisySig[[i]] = signalI[i] + rnorm(1, 0, sig_noise_prop*sqrt(signalI[i]))
     } else {
-      noisySig[[i]] = signalI[i] + rnorm(1, 0, SN*10)
+      noisySig[[i]] = signalI[i] + rnorm(1, 0, sig_noise_prop*10)
     }
   }
   
-  #plot(noisySig, type = "l")
-  return(list(data = data.frame(time = c((1:(1.5*n))/10), intensity = noisySig), steps = stoSigSteps))
-  
+  # Return a list containing the simulated trace and the number of steps,
+  # as well as simulated timepoints (0 + 0.1*n).
+  return(list(data = data.frame(time = c((1:(1.5*n))/10), 
+                                intensity = noisySig), 
+              steps = n_steps))
 }
