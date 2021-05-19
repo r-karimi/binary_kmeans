@@ -229,11 +229,11 @@ simulate_trace = function(n, sig_noise_prop, step_prob = 0.05){
   # when a step location is encountered.
   for (i in 1:n) {
     if (randoms[i] == 0) {
-      signalI[[i]] = signalAmp
+      signalI[i] = signalAmp
     } 
     if (randoms[i] == 1) {
       signalAmp = signalAmp + 100
-      signalI[[i]] = signalAmp
+      signalI[i] = signalAmp
     }
   }
   
@@ -251,10 +251,10 @@ simulate_trace = function(n, sig_noise_prop, step_prob = 0.05){
   noisySig = c()
   for (i in 1:(1.5*n)) {
     if (signalI[i] != 0) {
-      noisySig[[i]] = signalI[i] + rnorm(1, 0, sig_noise_prop*sqrt(signalI[i]))
+      noisySig[i] = signalI[i] + rnorm(1, 0, sig_noise_prop*sqrt(signalI[i]))
     } 
     else {
-      noisySig[[i]] = signalI[i] + rnorm(1, 0, sig_noise_prop*10)
+      noisySig[i] = signalI[i] + rnorm(1, 0, sig_noise_prop*10)
     }
   }
   

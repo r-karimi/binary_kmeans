@@ -26,7 +26,7 @@ simulated_trace = simulate_trace(n = 1000,
 plot(simulated_trace$data, type = "l")
 
 # Apply the pipe() function with compression of 10%.
-clustered_simulated_trace = pipe(simulated_trace$data, compression = 0.075)
+clustered_simulated_trace = pipe(simulated_trace$data, compression = 0.045)
 
 # Visualize the resultant clustering.
 cluster_plot(clustered_simulated_trace, "Simulated Trace Clustering")
